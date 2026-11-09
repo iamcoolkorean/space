@@ -1,0 +1,6 @@
+{
+  "name": "나만의 공간 포트폴리오 (Space Archive)",
+  "description": "바우하우스 미니멀리즘 감성의 나만의 공간 포트폴리오 및 큐레이션 웹 애플리케이션",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
