@@ -380,13 +380,10 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
 
         {/* 5. Main Representative Photo with White Margin */}
         <div className="pt-4 border-t border-zinc-800">
-          <div className="flex items-center justify-between mb-2">
+          <div className="mb-2">
             <label className="block text-xs font-bold text-zinc-200 uppercase tracking-wide">
               대표 사진 (Main Image - 1:1 정방형) <span className="text-zinc-400">*</span>
             </label>
-            <span className="text-[11px] text-zinc-500">
-              * 화이트 여백(#FFFFFF) 자동 변환 유지
-            </span>
           </div>
 
           <div className="flex flex-col sm:flex-row items-start gap-4">
