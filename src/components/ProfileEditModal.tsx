@@ -78,7 +78,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="예: SPACE ARCHIVE : 나만의 공간 기록"
+              placeholder="예: 나만의 공간 아카이브"
               required
               className="w-full bg-zinc-900 border border-zinc-700 px-3 py-2 text-xs text-white focus:outline-hidden focus:border-white transition-colors"
             />

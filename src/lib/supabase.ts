@@ -143,7 +143,7 @@ export async function signInWithEmailPassword(email: string, password: string) {
       localStorage.setItem(STORAGE_KEY_DEMO_USER, JSON.stringify(existing));
       return { user: existing };
     }
-    if (trimmedEmail === 'owner@spacearchive.design') {
+    if (trimmedEmail === 'beta-tester@spacearchive.design' || trimmedEmail === 'owner@spacearchive.design') {
       return signInDemoUser(trimmedEmail);
     }
     // New email signing in for the first time
@@ -195,9 +195,9 @@ export async function signOutUser(): Promise<void> {
 export function signInDemoUser(customEmail?: string) {
   const demoUser: User = {
     id: '00000000-0000-0000-0000-000000000001',
-    email: customEmail || 'owner@spacearchive.design',
+    email: customEmail || 'beta-tester@spacearchive.design',
     app_metadata: {},
-    user_metadata: { full_name: 'Space Curator' },
+    user_metadata: { full_name: '베타 테스터' },
     aud: 'authenticated',
     created_at: new Date('2026-01-01').toISOString(),
   } as any;

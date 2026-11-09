@@ -123,9 +123,7 @@ export default function App() {
         const defaultSlug = (effectiveUser.email ? effectiveUser.email.split('@')[0] : 'my-space')
           .toLowerCase()
           .replace(/[^a-z0-9-_]/g, '-');
-        const defaultTitle = effectiveUser.full_name
-          ? `${effectiveUser.full_name}의 공간 아카이브`
-          : '나만의 공간 아카이브';
+        const defaultTitle = '나만의 공간 아카이브';
 
         prof = await createInitialProfile(
           effectiveUser.id,

@@ -18,7 +18,7 @@ export const InitialProfileModal: React.FC<InitialProfileModalProps> = ({
     .toLowerCase()
     .replace(/[^a-z0-9-_]/g, '-');
 
-  const [title, setTitle] = useState('나만의 공간 기록');
+  const [title, setTitle] = useState('나만의 공간 아카이브');
   const [slug, setSlug] = useState(defaultSlug);
   const [bio, setBio] = useState('당신의 아카이브에 대해 설명해주세요');
   const [isSubmitting, setIsSubmitting] = useState(false);
