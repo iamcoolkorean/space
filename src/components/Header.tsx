@@ -54,24 +54,26 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Zone 2: Navigation & Auxiliary Actions */}
         <div className="flex items-center gap-2 sm:gap-4 text-xs font-medium text-zinc-300">
           {/* Share Link Copy */}
-          <button
-            type="button"
-            onClick={handleCopyShareLink}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-zinc-300 hover:text-white transition-colors cursor-pointer"
-            title="외부 공유 링크 복사 (?u=slug&mode=view)"
-          >
-            {copied ? (
-              <>
-                <Check className="w-3.5 h-3.5 text-blue-400" />
-                <span className="hidden sm:inline text-blue-400">링크 복사됨</span>
-              </>
-            ) : (
-              <>
-                <Share2 className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">공유 링크</span>
-              </>
-            )}
-          </button>
+          {(currentUser || isViewMode) && (
+            <button
+              type="button"
+              onClick={handleCopyShareLink}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+              title="외부 공유 링크 복사 (?u=slug&mode=view)"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-blue-400" />
+                  <span className="hidden sm:inline text-blue-400">링크 복사됨</span>
+                </>
+              ) : (
+                <>
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">공유 링크</span>
+                </>
+              )}
+            </button>
+          )}
 
           {/* Auth State: Login / Logout */}
           {currentUser ? (

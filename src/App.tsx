@@ -253,7 +253,7 @@ export default function App() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1">
+      <main className="flex-1 flex flex-col">
         {isFormOpen ? (
           <SpaceForm
             initialSpace={editingSpace}
@@ -276,6 +276,21 @@ export default function App() {
               setLightboxCaption(caption);
             }}
           />
+        ) : !currentUser && !isViewMode ? (
+          /* Logged-out landing state: strictly only the uploaded photograph */
+          <div className="flex-1 flex items-center justify-center px-4 py-6 sm:py-12">
+            <div
+              onClick={() => setIsAuthModalOpen(true)}
+              className="w-full max-w-xl sm:max-w-2xl aspect-square overflow-hidden cursor-pointer group transition-all duration-300"
+              title="클릭하여 로그인"
+            >
+              <img
+                src="/assets/aistudio/IMG_1923_96377e0b.jpeg"
+                alt="SPACE ARCHIVE"
+                className="w-full h-full object-contain aspect-square select-none transition-transform duration-500 group-hover:scale-[1.01]"
+              />
+            </div>
+          </div>
         ) : (
           <SpaceList
             profile={profile}
