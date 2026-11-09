@@ -20,7 +20,7 @@ export const InitialProfileModal: React.FC<InitialProfileModalProps> = ({
 
   const [title, setTitle] = useState('나만의 공간 기록');
   const [slug, setSlug] = useState(defaultSlug);
-  const [bio, setBio] = useState('도시 곳곳에서 발견한 감각적인 공간과 건축을 1:1 정방형 프레임으로 기록합니다.');
+  const [bio, setBio] = useState('당신의 아카이브에 대해 설명해주세요');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -52,7 +52,7 @@ export const InitialProfileModal: React.FC<InitialProfileModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xs p-4">
       <div className="w-full max-w-md bg-zinc-950 border border-zinc-800 p-6 shadow-2xl text-zinc-100">
         <div className="flex items-center gap-2 border-b border-zinc-800 pb-3 mb-4">
-          <Sparkles className="w-4 h-4 text-blue-400" />
+          <Sparkles className="w-4 h-4 text-white" />
           <h3 className="text-sm font-semibold tracking-wide text-white uppercase">
             포트폴리오 초기 프로필 설정
           </h3>
@@ -65,7 +65,7 @@ export const InitialProfileModal: React.FC<InitialProfileModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-zinc-300 mb-1">
-              포트폴리오 제목 <span className="text-blue-400">*</span>
+              포트폴리오 제목 <span className="text-zinc-400">*</span>
             </label>
             <input
               type="text"
@@ -73,13 +73,13 @@ export const InitialProfileModal: React.FC<InitialProfileModalProps> = ({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="예: ARCHIVE : 나만의 공간 기록"
               required
-              className="w-full bg-zinc-900 border border-zinc-700 px-3 py-2 text-xs text-white focus:outline-hidden focus:border-blue-500"
+              className="w-full bg-zinc-900 border border-zinc-700 px-3 py-2 text-xs text-white focus:outline-hidden focus:border-white transition-colors"
             />
           </div>
 
           <div>
             <label className="block text-xs font-medium text-zinc-300 mb-1">
-              고유 주소 아이디 (slug) <span className="text-blue-400">*</span>
+              고유 주소 아이디 (slug) <span className="text-zinc-400">*</span>
             </label>
             <div className="relative">
               <input
@@ -88,7 +88,7 @@ export const InitialProfileModal: React.FC<InitialProfileModalProps> = ({
                 onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '-'))}
                 placeholder="my-archive"
                 required
-                className="w-full bg-zinc-900 border border-zinc-700 px-3 py-2 text-xs font-mono text-white focus:outline-hidden focus:border-blue-500"
+                className="w-full bg-zinc-900 border border-zinc-700 px-3 py-2 text-xs font-mono text-white focus:outline-hidden focus:border-white transition-colors"
               />
               <User className="w-3.5 h-3.5 text-zinc-500 absolute right-3 top-2.5" />
             </div>
@@ -105,8 +105,8 @@ export const InitialProfileModal: React.FC<InitialProfileModalProps> = ({
               rows={3}
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              placeholder="아카이빙 취지와 감상을 간단히 적어주세요."
-              className="w-full bg-zinc-900 border border-zinc-700 px-3 py-2 text-xs text-white focus:outline-hidden focus:border-blue-500 leading-relaxed"
+              placeholder="당신의 아카이브에 대해 설명해주세요"
+              className="w-full bg-zinc-900 border border-zinc-700 px-3 py-2 text-xs text-white focus:outline-hidden focus:border-white leading-relaxed transition-colors"
             />
           </div>
 
@@ -118,7 +118,7 @@ export const InitialProfileModal: React.FC<InitialProfileModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 transition-colors cursor-pointer shadow-xs"
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-black bg-white hover:bg-zinc-200 transition-colors cursor-pointer shadow-xs"
             >
               <span>{isSubmitting ? '생성 중...' : '포트폴리오 시작하기'}</span>
               <ArrowRight className="w-3.5 h-3.5" />

@@ -56,7 +56,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
       <div className="w-full max-w-lg bg-zinc-950 border border-zinc-800 p-6 shadow-2xl text-zinc-100">
         <div className="flex items-center justify-between border-b border-zinc-800 pb-3 mb-5">
           <div className="flex items-center gap-2">
-            <User className="w-4 h-4 text-blue-400" />
+            <User className="w-4 h-4 text-white" />
             <h3 className="text-sm font-semibold tracking-wide text-white uppercase">
               포트폴리오 프로필 설정
             </h3>
@@ -80,7 +80,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="예: SPACE ARCHIVE : 나만의 공간 기록"
               required
-              className="w-full bg-zinc-900 border border-zinc-700 px-3 py-2 text-xs text-white focus:outline-hidden focus:border-blue-500"
+              className="w-full bg-zinc-900 border border-zinc-700 px-3 py-2 text-xs text-white focus:outline-hidden focus:border-white transition-colors"
             />
           </div>
 
@@ -93,7 +93,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               placeholder="포트폴리오의 취지와 아카이빙 방향성을 소개해주세요."
-              className="w-full bg-zinc-900 border border-zinc-700 px-3 py-2 text-xs text-white focus:outline-hidden focus:border-blue-500 leading-relaxed"
+              className="w-full bg-zinc-900 border border-zinc-700 px-3 py-2 text-xs text-white focus:outline-hidden focus:border-white leading-relaxed transition-colors"
             />
           </div>
 
@@ -107,7 +107,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
               onChange={(e) => setSlug(e.target.value)}
               placeholder="minimal-archive"
               required
-              className="w-full bg-zinc-900 border border-zinc-700 px-3 py-2 text-xs font-mono text-white focus:outline-hidden focus:border-blue-500"
+              className="w-full bg-zinc-900 border border-zinc-700 px-3 py-2 text-xs font-mono text-white focus:outline-hidden focus:border-white transition-colors"
             />
             <p className="mt-1 text-[11px] text-zinc-500">
               * 공유 링크 생성 시 <code>?u={slug}&amp;mode=view</code> 형식으로 사용됩니다.
@@ -130,7 +130,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
             <button
               type="submit"
               disabled={isSaving}
-              className="px-4 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 transition-colors cursor-pointer shadow-xs"
+              className="px-4 py-2 text-xs font-semibold text-black bg-white hover:bg-zinc-200 transition-colors cursor-pointer shadow-xs"
             >
               {isSaving ? '저장 중...' : '저장하기'}
             </button>

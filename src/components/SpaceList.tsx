@@ -41,7 +41,7 @@ export const SpaceList: React.FC<SpaceListProps> = ({
           {!isViewMode && isOwner && (
             <button
               onClick={onEditProfileClick}
-              className="self-start md:self-end text-xs font-medium text-zinc-400 hover:text-blue-400 transition-colors underline underline-offset-4 cursor-pointer"
+              className="self-start md:self-end text-xs font-medium text-zinc-400 hover:text-white transition-colors underline underline-offset-4 cursor-pointer"
             >
               포트폴리오 정보 수정
             </button>
@@ -62,7 +62,7 @@ export const SpaceList: React.FC<SpaceListProps> = ({
             onClick={() => setLayoutColumns(1)}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
               layoutColumns === 1
-                ? 'bg-blue-600 text-white shadow-xs'
+                ? 'bg-white text-black shadow-xs'
                 : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
             }`}
             title="1열로 보기"
@@ -75,7 +75,7 @@ export const SpaceList: React.FC<SpaceListProps> = ({
             onClick={() => setLayoutColumns(2)}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
               layoutColumns === 2
-                ? 'bg-blue-600 text-white shadow-xs'
+                ? 'bg-white text-black shadow-xs'
                 : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
             }`}
             title="2열로 보기"
@@ -100,7 +100,7 @@ export const SpaceList: React.FC<SpaceListProps> = ({
               <button
                 type="button"
                 onClick={onAddSpaceClick}
-                className="flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 transition-colors cursor-pointer shadow-xs"
+                className="flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-black bg-white hover:bg-zinc-200 transition-colors cursor-pointer shadow-xs"
               >
                 <Plus className="w-4 h-4" />
                 <span>새로운 공간 추가하기</span>
@@ -138,10 +138,10 @@ export const SpaceList: React.FC<SpaceListProps> = ({
                   {/* Minimal Content: ONLY Space Name and Location */}
                   <div className="p-3 sm:p-4">
                     <div className="flex items-start justify-between gap-1.5 mb-1.5">
-                      <h2 className="text-sm sm:text-base font-bold text-white group-hover:text-blue-400 transition-colors tracking-tight line-clamp-1">
+                      <h2 className="text-sm sm:text-base font-bold text-white group-hover:text-zinc-300 transition-colors tracking-tight line-clamp-1">
                         {space.name}
                       </h2>
-                      <ArrowUpRight className="w-3.5 h-3.5 text-zinc-500 group-hover:text-blue-400 transition-colors shrink-0 mt-0.5" />
+                      <ArrowUpRight className="w-3.5 h-3.5 text-zinc-500 group-hover:text-zinc-300 transition-colors shrink-0 mt-0.5" />
                     </div>
 
                     <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-normal">
@@ -184,10 +184,10 @@ export const SpaceList: React.FC<SpaceListProps> = ({
                   {/* Right: ONLY Space Name and Location */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2 mb-2">
-                      <h2 className="text-base sm:text-xl font-bold text-white group-hover:text-blue-400 transition-colors tracking-tight truncate">
+                      <h2 className="text-base sm:text-xl font-bold text-white group-hover:text-zinc-300 transition-colors tracking-tight truncate">
                         {space.name}
                       </h2>
-                      <ArrowUpRight className="w-4 h-4 text-zinc-500 group-hover:text-blue-400 transition-colors shrink-0" />
+                      <ArrowUpRight className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300 transition-colors shrink-0" />
                     </div>
 
                     <div className="flex items-center gap-1.5 text-xs sm:text-sm text-zinc-400 font-normal">

@@ -131,7 +131,7 @@ export default function App() {
           effectiveUser.id,
           defaultTitle,
           defaultSlug,
-          '나만의 감각적인 공간을 기록하는 아카이브입니다.'
+          '당신의 아카이브에 대해 설명해주세요'
         );
       }
 
@@ -240,7 +240,7 @@ export default function App() {
   if (isLoading || !profile) {
     return (
       <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center p-6 text-center text-white">
-        <div className="w-8 h-8 border-2 border-zinc-700 border-t-blue-500 animate-spin mb-4" />
+        <div className="w-8 h-8 border-2 border-zinc-700 border-t-white animate-spin mb-4" />
         <p className="text-xs font-semibold tracking-widest text-zinc-400 uppercase">
           SPACE ARCHIVE 로딩 중...
         </p>

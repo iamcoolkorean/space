@@ -244,7 +244,7 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
         {/* 1. Place Name with AI Auto-fill Button */}
         <div>
           <label className="block text-xs font-bold text-zinc-200 uppercase tracking-wide mb-2">
-            장소명 (Space Name) <span className="text-blue-400">*</span>
+            장소명 (Space Name) <span className="text-zinc-400">*</span>
           </label>
           <div className="flex flex-col sm:flex-row gap-2">
             <input
@@ -256,13 +256,13 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
               }}
               placeholder="예: 아틀리에 아키브, 블루보틀 삼청, 성수 어니언"
               required
-              className="flex-1 bg-zinc-900 border border-zinc-700 px-3 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:outline-hidden focus:border-blue-500"
+              className="flex-1 bg-zinc-900 border border-zinc-700 px-3 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:outline-hidden focus:border-white transition-colors"
             />
             <button
               type="button"
               onClick={handleAiSuggest}
               disabled={isAiLoading || !name.trim()}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-500 disabled:cursor-not-allowed transition-colors shrink-0 cursor-pointer shadow-xs"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-black bg-white hover:bg-zinc-200 disabled:bg-zinc-800 disabled:text-zinc-500 disabled:cursor-not-allowed transition-colors shrink-0 cursor-pointer shadow-xs"
             >
               {isAiLoading ? (
                 <>
@@ -279,8 +279,8 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
           </div>
 
           {aiSuccessMessage && (
-            <p className="mt-2 text-xs text-blue-400 font-medium flex items-center gap-1.5">
-              <Check className="w-3.5 h-3.5" />
+            <p className="mt-2 text-xs text-zinc-300 font-medium flex items-center gap-1.5">
+              <Check className="w-3.5 h-3.5 text-white" />
               <span>{aiSuccessMessage}</span>
             </p>
           )}
@@ -296,7 +296,7 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
         {/* 2. Detailed Address */}
         <div>
           <label className="block text-xs font-bold text-zinc-200 uppercase tracking-wide mb-2">
-            세부 주소 (Location) <span className="text-blue-400">*</span>
+            세부 주소 (Location) <span className="text-zinc-400">*</span>
           </label>
           <input
             type="text"
@@ -304,7 +304,7 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
             onChange={(e) => setLocation(e.target.value)}
             placeholder="예: 서울특별시 종로구 북촌로 31-18 (Gemini로 자동 입력 가능)"
             required
-            className="w-full bg-zinc-900 border border-zinc-700 px-3 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:outline-hidden focus:border-blue-500"
+            className="w-full bg-zinc-900 border border-zinc-700 px-3 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:outline-hidden focus:border-white transition-colors"
           />
           <p className="mt-1.5 text-[11px] text-zinc-500">
             * 자동 완성된 주소는 사용자가 직접 수정하거나 보완할 수 있습니다.
@@ -324,7 +324,7 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
               tags.map((tag) => (
                 <span
                   key={tag}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-blue-400 bg-zinc-900 border border-zinc-700"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-zinc-200 bg-zinc-900 border border-zinc-700"
                 >
                   <span>#{tag}</span>
                   <button
@@ -351,7 +351,7 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
                 }
               }}
               placeholder="태그 입력 후 Enter 또는 추가 버튼 클릭"
-              className="flex-1 bg-zinc-900 border border-zinc-700 px-3 py-1.5 text-xs text-white placeholder:text-zinc-500 focus:outline-hidden focus:border-blue-500"
+              className="flex-1 bg-zinc-900 border border-zinc-700 px-3 py-1.5 text-xs text-white placeholder:text-zinc-500 focus:outline-hidden focus:border-white transition-colors"
             />
             <button
               type="button"
@@ -374,7 +374,7 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="이 공간에서 느낀 분위기, 건축적 요소, 빛과 가구의 조화, 또는 개인적인 사색을 자유롭게 기록해주세요."
-            className="w-full bg-zinc-900 border border-zinc-700 p-3 text-sm text-white placeholder:text-zinc-500 focus:outline-hidden focus:border-blue-500 leading-relaxed"
+            className="w-full bg-zinc-900 border border-zinc-700 p-3 text-sm text-white placeholder:text-zinc-500 focus:outline-hidden focus:border-white leading-relaxed transition-colors"
           />
         </div>
 
@@ -382,7 +382,7 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
         <div className="pt-4 border-t border-zinc-800">
           <div className="flex items-center justify-between mb-2">
             <label className="block text-xs font-bold text-zinc-200 uppercase tracking-wide">
-              대표 사진 (Main Image - 1:1 정방형) <span className="text-blue-400">*</span>
+              대표 사진 (Main Image - 1:1 정방형) <span className="text-zinc-400">*</span>
             </label>
             <span className="text-[11px] text-zinc-500">
               * 화이트 여백(#FFFFFF) 자동 변환 유지
@@ -394,7 +394,7 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
             <div className="w-40 h-40 aspect-square bg-white border border-zinc-700 flex items-center justify-center overflow-hidden shrink-0 relative">
               {isUploadingMain ? (
                 <div className="flex flex-col items-center justify-center p-2 text-center">
-                  <Loader2 className="w-6 h-6 animate-spin text-blue-600 mb-1" />
+                  <Loader2 className="w-6 h-6 animate-spin text-zinc-800 mb-1" />
                   <span className="text-[10px] text-zinc-700">정방형 변환 중...</span>
                 </div>
               ) : mainImageUrl ? (
@@ -494,7 +494,7 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
                 className="w-full aspect-square border border-dashed border-zinc-700 hover:border-zinc-500 bg-zinc-950 flex flex-col items-center justify-center text-center p-2 cursor-pointer transition-colors"
               >
                 {isUploadingSub ? (
-                  <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+                  <Loader2 className="w-5 h-5 animate-spin text-zinc-300" />
                 ) : (
                   <>
                     <Plus className="w-5 h-5 text-zinc-500 mb-1" />
@@ -519,7 +519,7 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex items-center gap-2 px-6 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-600 transition-colors cursor-pointer shadow-xs"
+            className="flex items-center gap-2 px-6 py-2.5 text-xs font-semibold text-black bg-white hover:bg-zinc-200 disabled:bg-zinc-800 disabled:text-zinc-600 transition-colors cursor-pointer shadow-xs"
           >
             {isSubmitting ? (
               <>

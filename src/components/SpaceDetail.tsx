@@ -96,13 +96,13 @@ export const SpaceDetail: React.FC<SpaceDetailProps> = ({
 
         {/* Location */}
         <div className="flex items-center gap-2 text-sm text-zinc-400 mb-4 font-normal">
-          <MapPin className="w-4 h-4 text-blue-400 shrink-0" />
+          <MapPin className="w-4 h-4 text-zinc-400 shrink-0" />
           <span>{space.location}</span>
         </div>
 
         {/* Tags */}
         {space.tags && space.tags.length > 0 && (
-          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-sm font-semibold text-blue-400 mb-6">
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-sm font-medium text-zinc-300 mb-6">
             {space.tags.map((tag, idx) => {
               const label = tag.startsWith('#') ? tag : `#${tag}`;
               return <span key={idx}>{label}</span>;
@@ -131,7 +131,7 @@ export const SpaceDetail: React.FC<SpaceDetailProps> = ({
               onClick={() => setColumns(2)}
               className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer ${
                 columns === 2
-                  ? 'bg-blue-600 text-white shadow-xs'
+                  ? 'bg-white text-black shadow-xs'
                   : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
               }`}
               title="2열로 정방형 사진 보기"
@@ -143,7 +143,7 @@ export const SpaceDetail: React.FC<SpaceDetailProps> = ({
               onClick={() => setColumns(1)}
               className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer ${
                 columns === 1
-                  ? 'bg-blue-600 text-white shadow-xs'
+                  ? 'bg-white text-black shadow-xs'
                   : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
               }`}
               title="1열로 정방형 사진 크게 보기"
