@@ -74,30 +74,46 @@ const DEFAULT_SPACES: Space[] = [
   },
 ];
 
-function getLocalProfile(): Profile {
+const KEY_LOCAL_PROFILES_LIST = 'space_portfolio_profiles_list_v4';
+
+function getLocalProfilesList(): Profile[] {
   try {
-    const raw = localStorage.getItem(KEY_LOCAL_PROFILE);
-    if (raw) return JSON.parse(raw);
+    const raw = localStorage.getItem(KEY_LOCAL_PROFILES_LIST);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
   } catch (e) {
-    console.error('Failed reading local profile:', e);
+    console.error('Failed reading local profiles list:', e);
   }
-  return DEFAULT_PROFILE;
+  const initial = [DEFAULT_PROFILE];
+  try {
+    localStorage.setItem(KEY_LOCAL_PROFILES_LIST, JSON.stringify(initial));
+  } catch {}
+  return initial;
 }
 
-function setLocalProfile(profile: Profile): void {
+function saveLocalProfileToList(profile: Profile): void {
   try {
-    localStorage.setItem(KEY_LOCAL_PROFILE, JSON.stringify(profile));
+    const list = getLocalProfilesList();
+    const idx = list.findIndex((p) => p.id === profile.id);
+    if (idx >= 0) {
+      list[idx] = profile;
+    } else {
+      list.push(profile);
+    }
+    localStorage.setItem(KEY_LOCAL_PROFILES_LIST, JSON.stringify(list));
   } catch (e) {
-    console.error('Failed saving local profile:', e);
+    console.error('Failed saving profile to list:', e);
   }
 }
 
 function getLocalSpaces(): Space[] {
   try {
     const raw = localStorage.getItem(KEY_LOCAL_SPACES);
-    if (raw) {
+    if (raw !== null) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch (e) {
     console.error('Failed reading local spaces:', e);
@@ -136,23 +152,31 @@ export async function getProfile(slug?: string, currentUserId?: string): Promise
     }
   }
 
-  // Local storage fallback
-  const localProf = getLocalProfile();
-  if (slug && localProf.slug === slug) {
-    return localProf;
-  }
-  if (currentUserId && localProf.id === currentUserId) {
-    return localProf;
-  }
-  if (!slug) {
-    return localProf;
+  // Local storage lookup
+  const profiles = getLocalProfilesList();
+
+  if (currentUserId) {
+    const matched = profiles.find((p) => p.id === currentUserId);
+    if (matched) return matched;
+    // CRITICAL: Do NOT fall back to DEFAULT_PROFILE if looking for a specific currentUserId
+    return null;
   }
 
-  return localProf;
+  if (slug) {
+    const matched = profiles.find((p) => p.slug === slug);
+    if (matched) return matched;
+    return null;
+  }
+
+  // Only for unauthenticated / default demo visitor
+  return DEFAULT_PROFILE;
 }
 
-export async function saveProfile(updates: Partial<Profile>): Promise<Profile> {
-  const current = getLocalProfile();
+export async function saveProfile(updates: Partial<Profile>, profileId?: string): Promise<Profile> {
+  const targetId = profileId || updates.id;
+  const profiles = getLocalProfilesList();
+  const current = (targetId ? profiles.find((p) => p.id === targetId) : null) || profiles[0] || DEFAULT_PROFILE;
+
   const updated: Profile = {
     ...current,
     ...updates,
@@ -172,7 +196,7 @@ export async function saveProfile(updates: Partial<Profile>): Promise<Profile> {
     }
   }
 
-  setLocalProfile(updated);
+  saveLocalProfileToList(updated);
   return updated;
 }
 
@@ -202,7 +226,7 @@ export async function createInitialProfile(
     }
   }
 
-  setLocalProfile(newProfile);
+  saveLocalProfileToList(newProfile);
   return newProfile;
 }
 
@@ -219,8 +243,7 @@ export async function getSpaces(profileId: string): Promise<Space[]> {
         .eq('profile_id', profileId)
         .order('created_at', { ascending: false });
 
-      if (!error && data && data.length > 0) {
-        setLocalSpaces(data as Space[]);
+      if (!error && Array.isArray(data)) {
         return data as Space[];
       }
     } catch (e) {
@@ -228,10 +251,10 @@ export async function getSpaces(profileId: string): Promise<Space[]> {
     }
   }
 
-  // Fallback to local spaces
+  // Fallback to local spaces: ONLY return spaces belonging to this profile_id
   const local = getLocalSpaces();
   const matched = local.filter((s) => s.profile_id === profileId);
-  return matched.length > 0 ? matched : local;
+  return matched;
 }
 
 export async function addSpace(data: SpaceFormData, profileId: string): Promise<Space> {

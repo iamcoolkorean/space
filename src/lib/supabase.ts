@@ -112,10 +112,42 @@ export async function signInWithOAuth(provider: 'google' | 'github') {
   return data;
 }
 
+const KEY_LOCAL_USERS = 'space_portfolio_local_users_v2';
+
+function getLocalUsersMap(): Record<string, User> {
+  try {
+    const raw = localStorage.getItem(KEY_LOCAL_USERS);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return {};
+}
+
+function saveLocalUser(user: User): void {
+  try {
+    const map = getLocalUsersMap();
+    if (user.email) {
+      map[user.email.toLowerCase()] = user;
+    }
+    map[user.id] = user;
+    localStorage.setItem(KEY_LOCAL_USERS, JSON.stringify(map));
+  } catch {}
+}
+
 export async function signInWithEmailPassword(email: string, password: string) {
   const client = getSupabaseClient();
   if (!client) {
-    return signInDemoUser(email);
+    const trimmedEmail = email.trim().toLowerCase();
+    const map = getLocalUsersMap();
+    if (map[trimmedEmail]) {
+      const existing = map[trimmedEmail];
+      localStorage.setItem(STORAGE_KEY_DEMO_USER, JSON.stringify(existing));
+      return { user: existing };
+    }
+    if (trimmedEmail === 'owner@spacearchive.design') {
+      return signInDemoUser(trimmedEmail);
+    }
+    // New email signing in for the first time
+    return signUpDemoUser(trimmedEmail);
   }
 
   const { data, error } = await client.auth.signInWithPassword({
@@ -132,7 +164,7 @@ export async function signInWithEmailPassword(email: string, password: string) {
 export async function signUpWithEmailPassword(email: string, password: string) {
   const client = getSupabaseClient();
   if (!client) {
-    return signInDemoUser(email);
+    return signUpDemoUser(email.trim().toLowerCase());
   }
 
   const { data, error } = await client.auth.signUp({
@@ -167,13 +199,35 @@ export function signInDemoUser(customEmail?: string) {
     app_metadata: {},
     user_metadata: { full_name: 'Space Curator' },
     aud: 'authenticated',
-    created_at: new Date().toISOString(),
+    created_at: new Date('2026-01-01').toISOString(),
   } as any;
 
   try {
     localStorage.setItem(STORAGE_KEY_DEMO_USER, JSON.stringify(demoUser));
+    saveLocalUser(demoUser);
   } catch {}
   return { user: demoUser };
+}
+
+export function signUpDemoUser(email: string) {
+  const newUserId = typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `user-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+
+  const newUser: User = {
+    id: newUserId,
+    email: email,
+    app_metadata: {},
+    user_metadata: { full_name: email.split('@')[0] },
+    aud: 'authenticated',
+    created_at: new Date().toISOString(),
+  } as any;
+
+  try {
+    localStorage.setItem(STORAGE_KEY_DEMO_USER, JSON.stringify(newUser));
+    saveLocalUser(newUser);
+  } catch {}
+  return { user: newUser };
 }
 
 /**
