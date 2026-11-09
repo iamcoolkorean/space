@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Space } from '../types';
+import { Space, AuthSessionUser } from '../types';
 import { ArrowLeft, Edit3, Trash2, MapPin, Grid, Square, Maximize2 } from 'lucide-react';
 
 interface SpaceDetailProps {
   space: Space;
   isOwner: boolean;
+  currentUser?: AuthSessionUser | null;
   isViewMode: boolean;
   onBack: () => void;
   onEdit: (space: Space) => void;
@@ -15,7 +16,8 @@ interface SpaceDetailProps {
 export const SpaceDetail: React.FC<SpaceDetailProps> = ({
   space,
   isOwner,
-  isViewMode,
+  currentUser,
+  isViewMode: _isViewMode,
   onBack,
   onEdit,
   onDelete,
@@ -24,6 +26,11 @@ export const SpaceDetail: React.FC<SpaceDetailProps> = ({
   // Columns toggle: default 2 columns (grid-cols-2) vs 1 column (grid-cols-1)
   const [columns, setColumns] = useState<1 | 2>(2);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  // User can edit if marked as isOwner OR if logged-in user ID matches space's profile_id
+  const canEdit = Boolean(
+    isOwner || (currentUser && (currentUser.id === space.profile_id || isOwner))
+  );
 
   // Combine main image + sub images (de-duplicating if identical)
   const allImages = React.useMemo(() => {
@@ -62,12 +69,12 @@ export const SpaceDetail: React.FC<SpaceDetailProps> = ({
           <span>목록으로 돌아가기</span>
         </button>
 
-        {/* Edit and Delete Actions (Only shown to owner when not in view mode) */}
-        {!isViewMode && isOwner && (
+        {/* Edit and Delete Actions (Shown to owner) */}
+        {canEdit && (
           <div className="flex items-center gap-2">
             <button
               onClick={() => onEdit(space)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-zinc-200 border border-zinc-700 hover:border-zinc-400 hover:bg-zinc-900 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-black bg-white hover:bg-zinc-200 transition-colors cursor-pointer shadow-xs"
             >
               <Edit3 className="w-3.5 h-3.5" />
               <span>수정하기</span>

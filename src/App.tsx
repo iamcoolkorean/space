@@ -275,6 +275,7 @@ export default function App() {
           <SpaceDetail
             space={selectedSpace}
             isOwner={isOwner}
+            currentUser={currentUser}
             isViewMode={isViewMode}
             onBack={() => setSelectedSpace(null)}
             onEdit={handleOpenEditForm}

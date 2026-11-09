@@ -506,16 +506,8 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
           </div>
         </div>
 
-        {/* Submit and Cancel Actions */}
-        <div className="flex items-center justify-end gap-3 pt-6 border-t border-zinc-800">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={isSubmitting}
-            className="px-5 py-2.5 text-xs font-semibold text-zinc-400 hover:text-white transition-colors cursor-pointer"
-          >
-            취소
-          </button>
+        {/* Submit and Cancel Actions (Moved to the left) */}
+        <div className="flex items-center justify-start gap-3 pt-6 border-t border-zinc-800">
           <button
             type="submit"
             disabled={isSubmitting}
@@ -524,11 +516,19 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
             {isSubmitting ? (
               <>
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>저장 처리 중...</span>
+                <span>처리 중...</span>
               </>
             ) : (
-              <span>{isEditMode ? '수정 내용 저장' : '공간 등록 완료'}</span>
+              <span>{isEditMode ? '수정 완료' : '추가 완료'}</span>
             )}
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isSubmitting}
+            className="px-5 py-2.5 text-xs font-semibold text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 transition-colors cursor-pointer"
+          >
+            취소
           </button>
         </div>
       </form>
