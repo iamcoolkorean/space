@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "id": "space-1794298071586-sacnk",
+    "name": "뮤지엄산",
+    "location": "강원특별자치도 원주시 지정면 오크밸리2길 260",
+    "tags": [
+      "안도타다오",
+      "노출콘크리트",
+      "미니멀리즘"
+    ],
+    "comment": "",
+    "main_image_url": "https://raw.githubusercontent.com/iamcoolkorean/space/main/public/uploads/1794298047607_0.jpg",
+    "sub_image_urls": [],
+    "created_at": "2026-11-10T08:07:51.586Z"
+  }
+]
