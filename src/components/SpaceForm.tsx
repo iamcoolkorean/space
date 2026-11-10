@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Space, SpaceFormData } from '../types';
 import { convertToSquareJpegBlob } from '../lib/canvas';
-import { isSupabaseConnected, uploadImageToSupabaseStorage } from '../lib/supabase';
+import { uploadImageToGitHub } from '../lib/github';
 import {
   Sparkles,
   Upload,
@@ -37,9 +37,6 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
   const [subImageUrls, setSubImageUrls] = useState<string[]>(
     initialSpace?.sub_image_urls || []
   );
-  const [isPublic, setIsPublic] = useState(
-    initialSpace?.is_public !== undefined ? initialSpace.is_public : true
-  );
 
   // UI processing states
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -53,7 +50,7 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
   const mainFileInputRef = useRef<HTMLInputElement>(null);
   const subFileInputRef = useRef<HTMLInputElement>(null);
 
-  // Call Gemini AI server endpoint to search for address and recommended tags
+  // Gemini 2.5 Flash (googleSearch enabled) auto-complete for road address and hashtags
   const handleAiSuggest = async () => {
     if (!name.trim()) {
       setAiError('먼저 장소명을 입력해주세요.');
@@ -87,7 +84,7 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
         setTags(newTags);
       }
 
-      setAiSuccessMessage('Gemini 검색을 통해 세부 주소와 추천 해시태그를 불러왔습니다.');
+      setAiSuccessMessage('Gemini 2.5 Flash 검색을 통해 도로명 주소와 추천 해시태그를 자동 입력했습니다.');
       setTimeout(() => setAiSuccessMessage(''), 4000);
     } catch (err: any) {
       console.error('AI suggest error:', err);
@@ -111,6 +108,7 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
     setTags(tags.filter((t) => t !== tagToRemove));
   };
 
+  // Convert to 1600x1600 1:1 white-padded JPEG and commit via GitHub Contents API
   const handleMainImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -119,22 +117,13 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
     setFormError('');
 
     try {
-      const { blob, dataUrl } = await convertToSquareJpegBlob(file, 1600);
-      let finalUrl = dataUrl;
-
-      if (isSupabaseConnected()) {
-        try {
-          finalUrl = await uploadImageToSupabaseStorage(blob, 'main');
-        } catch (storageErr) {
-          console.warn('Storage upload fallback to Data URL:', storageErr);
-          finalUrl = dataUrl;
-        }
-      }
-
-      setMainImageUrl(finalUrl);
+      const { dataUrl } = await convertToSquareJpegBlob(file, 1600);
+      const timestamp = Date.now();
+      const uploadedUrl = await uploadImageToGitHub(dataUrl, timestamp, 0);
+      setMainImageUrl(uploadedUrl);
     } catch (err: any) {
-      console.error('Main image conversion failed:', err);
-      setFormError('사진 정방형 변환에 실패했습니다: ' + err.message);
+      console.error('Main image upload failed:', err);
+      setFormError('대표 사진 업로드 실패: ' + err.message);
     } finally {
       setIsUploadingMain(false);
       if (mainFileInputRef.current) mainFileInputRef.current.value = '';
@@ -150,27 +139,23 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
 
     try {
       const newUrls: string[] = [];
+      const timestamp = Date.now();
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const { blob, dataUrl } = await convertToSquareJpegBlob(file, 1600);
-
-        let finalUrl = dataUrl;
-        if (isSupabaseConnected()) {
-          try {
-            finalUrl = await uploadImageToSupabaseStorage(blob, `sub_${i}`);
-          } catch (storageErr) {
-            console.warn('Storage upload fallback to Data URL:', storageErr);
-            finalUrl = dataUrl;
-          }
-        }
-        newUrls.push(finalUrl);
+        const { dataUrl } = await convertToSquareJpegBlob(file, 1600);
+        const uploadedUrl = await uploadImageToGitHub(
+          dataUrl,
+          timestamp,
+          subImageUrls.length + i + 1
+        );
+        newUrls.push(uploadedUrl);
       }
 
       setSubImageUrls((prev) => [...prev, ...newUrls]);
     } catch (err: any) {
-      console.error('Sub image conversion failed:', err);
-      setFormError('세부 사진 변환에 실패했습니다: ' + err.message);
+      console.error('Sub images upload failed:', err);
+      setFormError('세부 사진 업로드 실패: ' + err.message);
     } finally {
       setIsUploadingSub(false);
       if (subFileInputRef.current) subFileInputRef.current.value = '';
@@ -207,7 +192,6 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
         comment: comment.trim(),
         main_image_url: mainImageUrl,
         sub_image_urls: subImageUrls,
-        is_public: isPublic,
       });
     } catch (err: any) {
       console.error('Save failed:', err);
@@ -217,34 +201,34 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12 text-zinc-100">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12 text-white font-sans w-full">
       {/* Top Header */}
-      <div className="flex items-center justify-between pb-6 mb-8 border-b border-zinc-800">
+      <div className="flex items-center justify-between pb-6 mb-8 border-b border-[#27272A]">
         <button
           onClick={onCancel}
-          className="flex items-center gap-2 text-xs font-semibold text-zinc-400 hover:text-white transition-colors uppercase tracking-wider cursor-pointer"
+          className="flex items-center gap-2 text-xs font-semibold text-[#A1A1AA] hover:text-white transition-colors uppercase tracking-wider cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>취소하고 돌아가기</span>
         </button>
 
-        <h1 className="text-sm font-bold uppercase tracking-wider text-white">
-          {isEditMode ? '공간 정보 및 사진 수정' : '새로운 공간 기록 추가'}
+        <h1 className="text-xs font-bold uppercase tracking-widest text-white">
+          {isEditMode ? '공간 기록 수정' : '새 공간 기록 추가'}
         </h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {formError && (
-          <div className="p-4 bg-red-950/60 border border-red-800 flex items-center gap-2.5 text-xs text-red-300">
+          <div className="p-4 bg-red-950/50 border border-red-800 flex items-center gap-2.5 text-xs text-red-300">
             <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
             <span>{formError}</span>
           </div>
         )}
 
-        {/* 1. Place Name with AI Auto-fill Button */}
+        {/* 1. Place Name with Gemini 2.5 Flash Auto-complete */}
         <div>
-          <label className="block text-xs font-bold text-zinc-200 uppercase tracking-wide mb-2">
-            장소명 (Space Name) <span className="text-zinc-400">*</span>
+          <label className="block text-xs font-bold text-white uppercase tracking-wide mb-2">
+            장소명 (Space Name) <span className="text-[#2563EB]">*</span>
           </label>
           <div className="flex flex-col sm:flex-row gap-2">
             <input
@@ -256,13 +240,13 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
               }}
               placeholder="예: 아틀리에 아키브, 블루보틀 삼청, 성수 어니언"
               required
-              className="flex-1 bg-zinc-900 border border-zinc-700 px-3 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:outline-hidden focus:border-white transition-colors"
+              className="flex-1 bg-zinc-950 border border-[#27272A] px-3 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-hidden focus:border-[#2563EB] transition-colors"
             />
             <button
               type="button"
               onClick={handleAiSuggest}
               disabled={isAiLoading || !name.trim()}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-black bg-white hover:bg-zinc-200 disabled:bg-zinc-800 disabled:text-zinc-500 disabled:cursor-not-allowed transition-colors shrink-0 cursor-pointer shadow-xs"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-[#2563EB] hover:bg-blue-500 disabled:bg-zinc-900 disabled:text-zinc-600 disabled:border disabled:border-[#27272A] disabled:cursor-not-allowed transition-colors shrink-0 cursor-pointer"
             >
               {isAiLoading ? (
                 <>
@@ -272,15 +256,15 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
               ) : (
                 <>
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>주소 및 태그 자동 완성</span>
+                  <span>주소 및 태그 자동완성</span>
                 </>
               )}
             </button>
           </div>
 
           {aiSuccessMessage && (
-            <p className="mt-2 text-xs text-zinc-300 font-medium flex items-center gap-1.5">
-              <Check className="w-3.5 h-3.5 text-white" />
+            <p className="mt-2 text-xs text-blue-400 font-medium flex items-center gap-1.5">
+              <Check className="w-3.5 h-3.5" />
               <span>{aiSuccessMessage}</span>
             </p>
           )}
@@ -293,44 +277,41 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
           )}
         </div>
 
-        {/* 2. Detailed Address */}
+        {/* 2. Road Address */}
         <div>
-          <label className="block text-xs font-bold text-zinc-200 uppercase tracking-wide mb-2">
-            세부 주소 (Location) <span className="text-zinc-400">*</span>
+          <label className="block text-xs font-bold text-white uppercase tracking-wide mb-2">
+            세부 주소 (Location) <span className="text-[#2563EB]">*</span>
           </label>
           <input
             type="text"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            placeholder="예: 서울특별시 종로구 북촌로 31-18 (Gemini로 자동 입력 가능)"
+            placeholder="예: 서울특별시 종로구 북촌로5길 76"
             required
-            className="w-full bg-zinc-900 border border-zinc-700 px-3 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:outline-hidden focus:border-white transition-colors"
+            className="w-full bg-zinc-950 border border-[#27272A] px-3 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-hidden focus:border-[#2563EB] transition-colors"
           />
-          <p className="mt-1.5 text-[11px] text-zinc-500">
-            * 자동 완성된 주소는 사용자가 직접 수정하거나 보완할 수 있습니다.
-          </p>
         </div>
 
-        {/* 3. Hashtags */}
+        {/* 3. Hashtags (Zero-Pill Rectangular Blocks) */}
         <div>
-          <label className="block text-xs font-bold text-zinc-200 uppercase tracking-wide mb-2">
-            해시태그 (Tags - 세부 화면에 표시)
+          <label className="block text-xs font-bold text-white uppercase tracking-wide mb-2">
+            해시태그 (Tags)
           </label>
 
-          <div className="flex flex-wrap items-center gap-2 mb-3 min-h-[36px] p-2 bg-zinc-950 border border-zinc-800">
+          <div className="flex flex-wrap items-center gap-2 mb-3 min-h-[38px] p-2.5 bg-zinc-950 border border-[#27272A]">
             {tags.length === 0 ? (
-              <span className="text-xs text-zinc-500">등록된 태그가 없습니다.</span>
+              <span className="text-xs text-[#A1A1AA]">등록된 태그가 없습니다.</span>
             ) : (
               tags.map((tag) => (
                 <span
                   key={tag}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-zinc-200 bg-zinc-900 border border-zinc-700"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-white bg-[#0A0A0A] border border-[#27272A]"
                 >
                   <span>#{tag}</span>
                   <button
                     type="button"
                     onClick={() => handleRemoveTag(tag)}
-                    className="text-zinc-400 hover:text-red-400 transition-colors cursor-pointer"
+                    className="text-[#A1A1AA] hover:text-red-400 transition-colors cursor-pointer"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -350,13 +331,13 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
                   handleAddTag();
                 }
               }}
-              placeholder="태그 입력 후 Enter 또는 추가 버튼 클릭"
-              className="flex-1 bg-zinc-900 border border-zinc-700 px-3 py-1.5 text-xs text-white placeholder:text-zinc-500 focus:outline-hidden focus:border-white transition-colors"
+              placeholder="태그 입력 후 Enter 또는 추가 클릭"
+              className="flex-1 bg-zinc-950 border border-[#27272A] px-3 py-2 text-xs text-white placeholder:text-zinc-600 focus:outline-hidden focus:border-[#2563EB] transition-colors"
             />
             <button
               type="button"
               onClick={() => handleAddTag()}
-              className="px-3 py-1.5 text-xs font-semibold text-zinc-200 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 transition-colors shrink-0 cursor-pointer"
+              className="px-3.5 py-2 text-xs font-semibold text-white border border-[#27272A] hover:border-[#2563EB] transition-colors shrink-0 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5 inline mr-1" />
               태그 추가
@@ -364,35 +345,34 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
           </div>
         </div>
 
-        {/* 4. Comment / Note */}
+        {/* 4. Contemplative Comment */}
         <div>
-          <label className="block text-xs font-bold text-zinc-200 uppercase tracking-wide mb-2">
-            공간 코멘트 (Comment - 세부 화면에 표시)
+          <label className="block text-xs font-bold text-white uppercase tracking-wide mb-2">
+            사색 코멘트 (Comment)
           </label>
           <textarea
             rows={4}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder="이 공간에서 느낀 분위기, 건축적 요소, 빛과 가구의 조화, 또는 개인적인 사색을 자유롭게 기록해주세요."
-            className="w-full bg-zinc-900 border border-zinc-700 p-3 text-sm text-white placeholder:text-zinc-500 focus:outline-hidden focus:border-white leading-relaxed transition-colors"
+            placeholder="이 공간에서 마주한 빛과 질감, 건축적 비례, 또는 사색의 기록을 남겨주세요."
+            className="w-full bg-zinc-950 border border-[#27272A] p-3 text-sm text-white placeholder:text-zinc-600 focus:outline-hidden focus:border-[#2563EB] leading-relaxed transition-colors"
           />
         </div>
 
-        {/* 5. Main Representative Photo with White Margin */}
-        <div className="pt-4 border-t border-zinc-800">
+        {/* 5. Main Representative Photo (1:1 White Matting) */}
+        <div className="pt-4 border-t border-[#27272A]">
           <div className="mb-2">
-            <label className="block text-xs font-bold text-zinc-200 uppercase tracking-wide">
-              대표 사진 (Main Image - 1:1 정방형) <span className="text-zinc-400">*</span>
+            <label className="block text-xs font-bold text-white uppercase tracking-wide">
+              대표 사진 (Main Image - 1:1 정방형) <span className="text-[#2563EB]">*</span>
             </label>
           </div>
 
           <div className="flex flex-col sm:flex-row items-start gap-4">
-            {/* Square Preview Container with Pristine White Margin */}
-            <div className="w-40 h-40 aspect-square bg-white border border-zinc-700 flex items-center justify-center overflow-hidden shrink-0 relative">
+            <div className="w-40 h-40 aspect-square bg-white border border-[#27272A] flex items-center justify-center overflow-hidden shrink-0 relative">
               {isUploadingMain ? (
                 <div className="flex flex-col items-center justify-center p-2 text-center">
-                  <Loader2 className="w-6 h-6 animate-spin text-zinc-800 mb-1" />
-                  <span className="text-[10px] text-zinc-700">정방형 변환 중...</span>
+                  <Loader2 className="w-6 h-6 animate-spin text-[#2563EB] mb-1" />
+                  <span className="text-[10px] text-zinc-700 font-medium">업로드 중...</span>
                 </div>
               ) : mainImageUrl ? (
                 <>
@@ -405,8 +385,8 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
                   <button
                     type="button"
                     onClick={() => setMainImageUrl('')}
-                    className="absolute top-1 right-1 p-1 bg-black/70 text-white hover:bg-black transition-colors"
-                    title="사진 지우기"
+                    className="absolute top-1 right-1 p-1 bg-black/80 text-white hover:bg-black transition-colors cursor-pointer"
+                    title="사진 제거"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -430,26 +410,26 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
               />
               <label
                 htmlFor="main-photo-upload"
-                className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-zinc-200 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-900 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white border border-[#27272A] hover:border-[#2563EB] bg-zinc-950 transition-colors cursor-pointer"
               >
-                <Upload className="w-3.5 h-3.5" />
-                <span>{mainImageUrl ? '대표 사진 교체하기' : '대표 사진 업로드'}</span>
+                <Upload className="w-3.5 h-3.5 text-[#2563EB]" />
+                <span>{mainImageUrl ? '대표 사진 변경' : '대표 사진 업로드'}</span>
               </label>
-              <p className="text-[11px] text-zinc-500 leading-relaxed">
-                가로형 또는 세로형 사진도 원본이 잘리지 않고 가장 긴 변을 기준으로 순백의 화이트 여백(#FFFFFF)이 채워진 1:1 정방형 이미지로 자동 변환됩니다.
+              <p className="text-[11px] text-[#A1A1AA] leading-relaxed">
+                업로드 시 브라우저 Canvas를 통해 최대 1600×1600px 크기의 1:1 정방형 순백색(#FFFFFF) 여백 이미지로 변환되어 GitHub 저장소에 커밋됩니다.
               </p>
             </div>
           </div>
         </div>
 
-        {/* 6. Sub Images Gallery with White Margin */}
-        <div className="pt-4 border-t border-zinc-800">
+        {/* 6. Sub Images Gallery */}
+        <div className="pt-4 border-t border-[#27272A]">
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-xs font-bold text-zinc-200 uppercase tracking-wide">
-              세부 사진들 (Sub Images)
+            <label className="block text-xs font-bold text-white uppercase tracking-wide">
+              서브 사진 (Sub Images)
             </label>
-            <span className="text-[11px] text-zinc-500">
-              현재 {subImageUrls.length}장 등록됨
+            <span className="text-[11px] text-[#A1A1AA]">
+              {subImageUrls.length}장 등록됨
             </span>
           </div>
 
@@ -457,18 +437,18 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
             {subImageUrls.map((url, idx) => (
               <div
                 key={idx}
-                className="relative aspect-square bg-white border border-zinc-700 overflow-hidden group"
+                className="relative aspect-square bg-white border border-[#27272A] overflow-hidden group"
               >
                 <img
                   src={url}
-                  alt={`세부 사진 ${idx + 1}`}
+                  alt={`서브 사진 ${idx + 1}`}
                   referrerPolicy="no-referrer"
                   className="w-full h-full aspect-square bg-white object-contain"
                 />
                 <button
                   type="button"
                   onClick={() => handleRemoveSubImage(idx)}
-                  className="absolute top-1 right-1 p-1 bg-black/80 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black"
+                  className="absolute top-1 right-1 p-1 bg-black/80 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black cursor-pointer"
                   title="사진 삭제"
                 >
                   <X className="w-3 h-3" />
@@ -488,14 +468,14 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
               />
               <label
                 htmlFor="sub-photos-upload"
-                className="w-full aspect-square border border-dashed border-zinc-700 hover:border-zinc-500 bg-zinc-950 flex flex-col items-center justify-center text-center p-2 cursor-pointer transition-colors"
+                className="w-full aspect-square border border-dashed border-[#27272A] hover:border-[#2563EB] bg-zinc-950 flex flex-col items-center justify-center text-center p-2 cursor-pointer transition-colors"
               >
                 {isUploadingSub ? (
-                  <Loader2 className="w-5 h-5 animate-spin text-zinc-300" />
+                  <Loader2 className="w-5 h-5 animate-spin text-[#2563EB]" />
                 ) : (
                   <>
-                    <Plus className="w-5 h-5 text-zinc-500 mb-1" />
-                    <span className="text-[10px] text-zinc-400 font-medium">사진 추가</span>
+                    <Plus className="w-5 h-5 text-[#A1A1AA] mb-1" />
+                    <span className="text-[10px] text-[#A1A1AA] font-medium">사진 추가</span>
                   </>
                 )}
               </label>
@@ -503,17 +483,17 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
           </div>
         </div>
 
-        {/* Submit and Cancel Actions (Moved to the left) */}
-        <div className="flex items-center justify-start gap-3 pt-6 border-t border-zinc-800">
+        {/* Submit and Cancel Actions (Left-aligned) */}
+        <div className="flex items-center justify-start gap-3 pt-6 border-t border-[#27272A]">
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="flex items-center gap-2 px-6 py-2.5 text-xs font-semibold text-black bg-white hover:bg-zinc-200 disabled:bg-zinc-800 disabled:text-zinc-600 transition-colors cursor-pointer shadow-xs"
+            disabled={isSubmitting || isUploadingMain || isUploadingSub}
+            className="flex items-center gap-2 px-6 py-2.5 text-xs font-semibold text-white bg-[#2563EB] hover:bg-blue-500 disabled:bg-zinc-900 disabled:text-zinc-600 transition-colors cursor-pointer"
           >
             {isSubmitting ? (
               <>
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>처리 중...</span>
+                <span>GitHub 커밋 중...</span>
               </>
             ) : (
               <span>{isEditMode ? '수정 완료' : '추가 완료'}</span>
@@ -523,7 +503,7 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
             type="button"
             onClick={onCancel}
             disabled={isSubmitting}
-            className="px-5 py-2.5 text-xs font-semibold text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 transition-colors cursor-pointer"
+            className="px-5 py-2.5 text-xs font-semibold text-[#A1A1AA] hover:text-white border border-[#27272A] hover:border-zinc-600 transition-colors cursor-pointer"
           >
             취소
           </button>

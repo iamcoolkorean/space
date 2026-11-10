@@ -16,9 +16,14 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Support direct fetch of public/data/spaces.json
+  app.get('/public/data/spaces.json', (_req, res) => {
+    res.sendFile(path.resolve(__dirname, 'public', 'data', 'spaces.json'));
+  });
+
   // Initialize Gemini AI client server-side
   const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY,
+    apiKey: process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY,
     httpOptions: {
       apiVersion: 'v1beta',
       headers: {

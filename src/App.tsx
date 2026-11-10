@@ -1,221 +1,130 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Space, Profile, SpaceFormData, AuthSessionUser } from './types';
+import { Space, SpaceFormData } from './types';
 import {
-  getProfile,
-  saveProfile,
-  createInitialProfile,
-  getSpaces,
-  addSpace,
-  updateSpace,
-  deleteSpace,
-} from './lib/store';
-import {
-  getAuthSession,
-  getAuthSessionSync,
-  signOutUser,
-  getSupabaseClient,
-} from './lib/supabase';
+  isAdminAuthenticated,
+  setAdminAuthenticated,
+  fetchSpacesData,
+  commitSpacesJson,
+  deleteImageFromGitHub,
+} from './lib/github';
 import { Header } from './components/Header';
 import { SpaceList } from './components/SpaceList';
 import { SpaceDetail } from './components/SpaceDetail';
 import { SpaceForm } from './components/SpaceForm';
-import { AuthModal } from './components/AuthModal';
-import { InitialProfileModal } from './components/InitialProfileModal';
-import { ProfileEditModal } from './components/ProfileEditModal';
+import { AdminPasswordModal } from './components/AdminPasswordModal';
 import { LightboxModal } from './components/LightboxModal';
 
 export default function App() {
-  // Query parameters: ?u=slug&mode=view
-  const [slugParam, setSlugParam] = useState<string | null>(null);
+  // Query parameter: ?mode=view
   const [isViewMode, setIsViewMode] = useState<boolean>(false);
 
-  // Auth state
-  const [currentUser, setCurrentUser] = useState<AuthSessionUser | null>(null);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
-  const [isInitialProfileModalOpen, setIsInitialProfileModalOpen] = useState<boolean>(false);
+  // Admin authentication state (stored in localStorage)
+  const [isAdmin, setIsAdmin] = useState<boolean>(() => isAdminAuthenticated());
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState<boolean>(false);
 
-  // App data state
-  const [profile, setProfile] = useState<Profile | null>(null);
+  // Spaces data state
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Main feed column layout state (Default: 2-column grid)
+  const [columns, setColumns] = useState<1 | 2>(2);
 
   // View routing state
   const [selectedSpace, setSelectedSpace] = useState<Space | null>(null);
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
   const [editingSpace, setEditingSpace] = useState<Space | null>(null);
 
-  // Profile edit modal
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
-
   // Lightbox state
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [lightboxCaption, setLightboxCaption] = useState<string | undefined>(undefined);
 
-  // Parse URL search params once on mount
+  // Check ?mode=view on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const u = params.get('u');
-    const mode = params.get('mode');
-
-    if (u) setSlugParam(u);
-    if (mode === 'view') setIsViewMode(true);
-  }, []);
-
-  // Check auth session
-  const checkAuth = useCallback(async () => {
-    const { user } = await getAuthSession();
-    if (user) {
-      const authUser: AuthSessionUser = {
-        id: user.id,
-        email: user.email,
-        avatar_url: user.user_metadata?.avatar_url,
-        full_name: user.user_metadata?.full_name,
-      };
-      setCurrentUser(authUser);
-      return authUser;
-    } else {
-      setCurrentUser(null);
-      return null;
+    if (params.get('mode') === 'view') {
+      setIsViewMode(true);
     }
   }, []);
 
-  // Check auth session on mount & subscribe to Supabase Auth state changes
-  useEffect(() => {
-    checkAuth();
-
-    const client = getSupabaseClient();
-    if (client) {
-      const { data: authListener } = client.auth.onAuthStateChange((_event, session) => {
-        if (session?.user) {
-          setCurrentUser({
-            id: session.user.id,
-            email: session.user.email,
-            avatar_url: session.user.user_metadata?.avatar_url,
-            full_name: session.user.user_metadata?.full_name,
-          });
-        } else {
-          // If a local demo curator session is active, do not overwrite with null
-          const { user: localUser } = getAuthSessionSync();
-          if (!localUser) {
-            setCurrentUser(null);
-          }
-        }
-      });
-
-      return () => {
-        authListener.subscription.unsubscribe();
-      };
-    }
-  }, [checkAuth]);
-
-  // Load profile and spaces based on slug or current user
-  const loadData = useCallback(async (forcedUser?: AuthSessionUser | null) => {
+  // Load spaces data from public/data/spaces.json or GitHub Contents API
+  const loadSpaces = useCallback(async () => {
     setIsLoading(true);
     try {
-      const targetSlug = slugParam || undefined;
-      const effectiveUser = forcedUser !== undefined ? forcedUser : currentUser;
-      const targetUserId = !targetSlug && effectiveUser ? effectiveUser.id : undefined;
-
-      let prof = await getProfile(targetSlug, targetUserId);
-
-      // If user is logged in, but has no profile row yet (first-time login / signup), auto-create their initial empty profile
-      if (!prof && effectiveUser) {
-        const defaultSlug = (effectiveUser.email ? effectiveUser.email.split('@')[0] : 'my-space')
-          .toLowerCase()
-          .replace(/[^a-z0-9-_]/g, '-');
-        const defaultTitle = '나만의 공간 아카이브';
-
-        prof = await createInitialProfile(
-          effectiveUser.id,
-          defaultTitle,
-          defaultSlug,
-          '당신의 아카이브에 대해 설명해주세요'
-        );
-      }
-
-      // If still no profile, fallback to default seed
-      if (!prof) {
-        prof = await getProfile();
-      }
-
-      setProfile(prof);
-
-      if (prof) {
-        const sps = await getSpaces(prof.id);
-        setSpaces(sps);
-      }
+      const { spaces: loaded } = await fetchSpacesData();
+      setSpaces(loaded);
     } catch (err) {
-      console.error('Failed to load portfolio data:', err);
+      console.error('Failed to load spaces:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [slugParam, currentUser]);
+  }, []);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    loadSpaces();
+  }, [loadSpaces]);
 
-  // Ownership evaluation: user is owner if logged in and user.id matches profile.id
-  const isOwner = Boolean(
-    currentUser && profile && currentUser.id === profile.id
-  );
-
-  const handleAuthSuccess = async (authUser?: any) => {
-    let resolvedUser = authUser;
-    if (!resolvedUser) {
-      resolvedUser = await checkAuth();
+  // Lock icon toggle handler
+  const handleLockToggleClick = () => {
+    if (isAdmin) {
+      // Toggle off (Logout)
+      setAdminAuthenticated(false);
+      setIsAdmin(false);
+      setIsFormOpen(false);
+      setEditingSpace(null);
     } else {
-      setCurrentUser(resolvedUser);
+      // Open password verification modal
+      setIsPasswordModalOpen(true);
     }
-    await loadData(resolvedUser);
   };
 
-  const handleLogout = async () => {
-    await signOutUser();
-    setCurrentUser(null);
-    setSelectedSpace(null);
-    setIsFormOpen(false);
-    loadData();
-  };
-
-  const handleInitialProfileCreated = async (title: string, slug: string, bio: string) => {
-    if (!currentUser) return;
-    const newProfile = await createInitialProfile(currentUser.id, title, slug, bio);
-    setProfile(newProfile);
-    setIsInitialProfileModalOpen(false);
-    const sps = await getSpaces(newProfile.id);
-    setSpaces(sps);
-  };
-
-  // Space Form Actions (Owner only)
   const handleOpenAddForm = () => {
-    if (!currentUser) {
-      setIsAuthModalOpen(true);
+    if (!isAdmin) {
+      setIsPasswordModalOpen(true);
       return;
     }
-    if (!isOwner) return;
     setEditingSpace(null);
     setIsFormOpen(true);
   };
 
   const handleOpenEditForm = (space: Space) => {
-    if (!isOwner) return;
+    if (!isAdmin) return;
     setEditingSpace(space);
     setIsFormOpen(true);
   };
 
   const handleSaveSpace = async (formData: SpaceFormData) => {
-    if (!profile || !isOwner) return;
+    if (!isAdmin) return;
 
     if (editingSpace) {
-      const updated = await updateSpace(editingSpace.id, formData);
-      setSpaces((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
-      if (selectedSpace?.id === updated.id) {
-        setSelectedSpace(updated);
+      const updatedSpace: Space = {
+        ...editingSpace,
+        ...formData,
+        updated_at: new Date().toISOString(),
+      };
+      const updatedList = spaces.map((s) =>
+        s.id === updatedSpace.id ? updatedSpace : s
+      );
+
+      await commitSpacesJson(updatedList, `feat(space): update ${updatedSpace.name}`);
+      setSpaces(updatedList);
+      if (selectedSpace?.id === updatedSpace.id) {
+        setSelectedSpace(updatedSpace);
       }
     } else {
-      const created = await addSpace(formData, profile.id);
-      setSpaces((prev) => [created, ...prev]);
+      const newSpace: Space = {
+        id: `space-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        name: formData.name.trim(),
+        location: formData.location.trim(),
+        tags: formData.tags,
+        comment: formData.comment.trim(),
+        main_image_url: formData.main_image_url,
+        sub_image_urls: formData.sub_image_urls,
+        created_at: new Date().toISOString(),
+      };
+      const updatedList = [newSpace, ...spaces];
+
+      await commitSpacesJson(updatedList, `feat(space): add ${newSpace.name}`);
+      setSpaces(updatedList);
     }
 
     setIsFormOpen(false);
@@ -223,44 +132,55 @@ export default function App() {
   };
 
   const handleDeleteSpace = async (spaceId: string) => {
-    if (!isOwner) return;
-    await deleteSpace(spaceId);
-    setSpaces((prev) => prev.filter((s) => s.id !== spaceId));
+    if (!isAdmin) return;
+
+    const target = spaces.find((s) => s.id === spaceId);
+    const updatedList = spaces.filter((s) => s.id !== spaceId);
+
+    // Clean up associated images in GitHub repository if applicable
+    if (target) {
+      const imagesToRemove = [
+        target.main_image_url,
+        ...(target.sub_image_urls || []),
+      ].filter(Boolean);
+      for (const imgUrl of imagesToRemove) {
+        await deleteImageFromGitHub(imgUrl);
+      }
+    }
+
+    await commitSpacesJson(
+      updatedList,
+      `chore(space): delete ${target ? target.name : spaceId}`
+    );
+
+    setSpaces(updatedList);
     setSelectedSpace(null);
   };
 
-  const handleSaveProfile = async (updates: Partial<Profile>) => {
-    if (!isOwner) return;
-    const updated = await saveProfile(updates);
-    setProfile(updated);
-  };
-
-  if (isLoading || !profile) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center p-6 text-center text-white">
-        <div className="w-8 h-8 border-2 border-zinc-700 border-t-white animate-spin mb-4" />
-        <p className="text-xs font-semibold tracking-widest text-zinc-400 uppercase">
-          SPACE ARCHIVE 로딩 중...
+      <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center p-6 text-center text-white font-sans">
+        <div className="w-8 h-8 border-2 border-[#27272A] border-t-[#2563EB] animate-spin mb-4" />
+        <p className="text-xs font-semibold tracking-widest text-[#A1A1AA] uppercase">
+          SPACE ARCHIVE LOADING...
         </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-gray-100 flex flex-col font-sans">
-      {/* Top Bar Header */}
+    <div className="min-h-screen bg-[#0A0A0A] text-white flex flex-col font-sans selection:bg-[#2563EB] selection:text-white">
+      {/* Top Header */}
       <Header
-        portfolioTitle={profile.portfolio_title}
-        slug={profile.slug}
-        currentUser={currentUser}
-        isOwner={isOwner}
+        columns={columns}
+        onChangeColumns={setColumns}
+        isAdmin={isAdmin}
         isViewMode={isViewMode}
-        onLoginClick={() => setIsAuthModalOpen(true)}
-        onLogoutClick={handleLogout}
+        onLockToggleClick={handleLockToggleClick}
         onAddSpaceClick={handleOpenAddForm}
       />
 
-      {/* Main Content Area */}
+      {/* Main Content */}
       <main className="flex-1 flex flex-col">
         {isFormOpen ? (
           <SpaceForm
@@ -274,8 +194,7 @@ export default function App() {
         ) : selectedSpace ? (
           <SpaceDetail
             space={selectedSpace}
-            isOwner={isOwner}
-            currentUser={currentUser}
+            isAdmin={isAdmin}
             isViewMode={isViewMode}
             onBack={() => setSelectedSpace(null)}
             onEdit={handleOpenEditForm}
@@ -285,62 +204,31 @@ export default function App() {
               setLightboxCaption(caption);
             }}
           />
-        ) : !currentUser && !isViewMode ? (
-          /* Logged-out landing state: strictly only the uploaded photograph */
-          <div className="flex-1 flex items-center justify-center px-4 py-6 sm:py-12">
-            <div
-              onClick={() => setIsAuthModalOpen(true)}
-              className="w-full max-w-xl sm:max-w-2xl aspect-square overflow-hidden cursor-pointer group transition-all duration-300"
-              title="클릭하여 로그인"
-            >
-              <img
-                src="/assets/aistudio/IMG_1923_96377e0b.jpeg"
-                alt="SPACE ARCHIVE"
-                className="w-full h-full object-contain aspect-square select-none transition-transform duration-500 group-hover:scale-[1.01]"
-              />
-            </div>
-          </div>
         ) : (
           <SpaceList
-            profile={profile}
             spaces={spaces}
+            columns={columns}
+            onChangeColumns={setColumns}
             onSelectSpace={(space) => setSelectedSpace(space)}
-            isOwner={isOwner}
+            isAdmin={isAdmin}
             isViewMode={isViewMode}
-            onEditProfileClick={() => setIsProfileModalOpen(true)}
             onAddSpaceClick={handleOpenAddForm}
           />
         )}
       </main>
 
-      {/* Lightbox Modal */}
+      {/* Admin Password Verification Modal */}
+      <AdminPasswordModal
+        isOpen={isPasswordModalOpen}
+        onSuccess={() => setIsAdmin(true)}
+        onClose={() => setIsPasswordModalOpen(false)}
+      />
+
+      {/* Fullscreen Lightbox Modal */}
       <LightboxModal
         imageUrl={lightboxUrl}
         altText={lightboxCaption}
         onClose={() => setLightboxUrl(null)}
-      />
-
-      {/* Supabase Auth Modal (OAuth & Email) */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        onAuthSuccess={handleAuthSuccess}
-      />
-
-      {/* First-Time Profile Creation Modal */}
-      <InitialProfileModal
-        isOpen={isInitialProfileModalOpen}
-        userId={currentUser?.id || ''}
-        userEmail={currentUser?.email}
-        onProfileCreated={handleInitialProfileCreated}
-      />
-
-      {/* Profile Edit Modal */}
-      <ProfileEditModal
-        isOpen={isProfileModalOpen}
-        profile={profile}
-        onSave={handleSaveProfile}
-        onClose={() => setIsProfileModalOpen(false)}
       />
     </div>
   );
