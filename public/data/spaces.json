@@ -1,5 +1,19 @@
 [
   {
+    "id": "space-1794310056987-c4udk",
+    "name": "중랑 캠핑숲",
+    "location": "서울 중랑구 망우로87길 110",
+    "tags": [
+      "도심속캠핑",
+      "자연친화",
+      "숲캉스"
+    ],
+    "comment": "",
+    "main_image_url": "https://raw.githubusercontent.com/iamcoolkorean/space/main/public/uploads/1794309999306_0.jpg",
+    "sub_image_urls": [],
+    "created_at": "2026-11-10T11:27:36.987Z"
+  },
+  {
     "id": "space-1794302025160-od8zt",
     "name": "Art gallery of NSW",
     "location": "Art Gallery Road, The Domain, Sydney NSW 2000, Australia",
