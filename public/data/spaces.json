@@ -28,20 +28,6 @@
     "updated_at": "2026-11-10T11:43:14.876Z"
   },
   {
-    "id": "space-1794309239590-d2y28",
-    "name": "관악산",
-    "location": "서울특별시 관악구 대학동 일대",
-    "tags": [
-      "자연경관",
-      "도심속자연",
-      "등산"
-    ],
-    "comment": "",
-    "main_image_url": "https://raw.githubusercontent.com/iamcoolkorean/space/main/public/uploads/1794309215998_0.jpg",
-    "sub_image_urls": [],
-    "created_at": "2026-11-10T11:13:59.590Z"
-  },
-  {
     "id": "space-1794298071586-sacnk",
     "name": "뮤지엄산",
     "location": "강원특별자치도 원주시 지정면 오크밸리2길 260",
